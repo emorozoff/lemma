@@ -10,7 +10,7 @@ Deploy: https://emorozoff.github.io/lemma/
 
 ## Версия
 
-Текущая версия: **v0.93**
+Текущая версия: **v0.94**
 
 Версия отображается в интерфейсе (хедер, рядом с логотипом).
 
@@ -57,7 +57,7 @@ src/
 
 ## Стиль (с v0.9 — минимализм, без киберпанка)
 
-- Шрифт: IBM Plex Mono (моноширинный — и заголовки, и UI). Все шрифт-переменные → `--font-ui`/`--font-display`.
+- Шрифты: вордмарк `lemma_` — IBM Plex Mono (`--font-logo`, override на `.header-logo`); весь остальной текст — PT Mono (`--font-ui`/`--font-display`). Обе из Google Fonts (index.html). PT Mono — один вес 400, жирный синтезируется браузером.
 - Палитра: чёрный/белый + **один** акцент `--accent: #e5342b` (красный). Токены в `:root`, тинты через `color-mix(in srgb, var(--accent) N%, transparent)` (`--accent-soft`, `--accent-line` и т.д.).
 - Семантика цвета: **красный = активно/верно/бренд**, **серый (`--text-muted`) = неактивно/неверно**. Легаси-алиасы: `--accent-green`/`--accent-amber` → `--accent`; `--accent-red` → `--text-muted`.
 - Светлая/тёмная тема: атрибут `[data-theme]` на `<html>` (тёмная по умолчанию, светлая — `[data-theme="light"]`). `ThemeProvider` + `lib/theme.ts`, переключатель в Настройках, ключ localStorage `lemma_theme`, pre-paint скрипт в `index.html` (без мигания).

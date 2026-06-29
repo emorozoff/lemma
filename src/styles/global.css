@@ -26,8 +26,9 @@
   --accent-amber: var(--accent);
   --accent-red:   var(--text-muted);
 
-  --font-display: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
-  --font-ui: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+  --font-logo: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+  --font-display: 'PT Mono', 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  --font-ui: 'PT Mono', 'IBM Plex Mono', ui-monospace, Menlo, monospace;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
@@ -212,7 +213,7 @@ button {
 }
 
 .header-logo {
-  font-family: var(--font-display);
+  font-family: var(--font-logo);
   font-size: 26px;
   font-weight: 700;
   color: var(--accent-green);

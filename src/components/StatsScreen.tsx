@@ -7,7 +7,13 @@ interface Props {
   onClose: () => void;
 }
 
-const LEVEL_COLORS = ['#555', '#3355aa', '#00aa55', '#00ff88', '#ffaa00'];
+const LEVEL_COLORS = [
+  'var(--text-dim)',
+  'color-mix(in srgb, var(--accent) 40%, var(--text-dim))',
+  'color-mix(in srgb, var(--accent) 65%, var(--text-dim))',
+  'color-mix(in srgb, var(--accent) 85%, var(--text-dim))',
+  'var(--accent)',
+];
 const LEVEL_NAMES  = ['Новые', 'Lvl 1', 'Lvl 2', 'Lvl 3', 'Lvl 4 ★'];
 const DISMISS_THRESHOLD = 100;
 
