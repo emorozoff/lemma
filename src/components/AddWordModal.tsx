@@ -1,4 +1,4 @@
-import { FC, useState } from 'react';
+import { FC, useState, useRef } from 'react';
 import { TOPICS } from '../data/topics';
 import { putCard } from '../db';
 import type { Card } from '../types';
@@ -8,12 +8,58 @@ interface Props {
   onAdded: () => void;
 }
 
+const DISMISS_THRESHOLD = 100;
+
 const AddWordModal: FC<Props> = ({ onClose, onAdded }) => {
   const [english, setEnglish] = useState('');
   const [russian, setRussian] = useState('');
   const [synonyms, setSynonyms] = useState('');
   const [example, setExample] = useState('');
   const [topicId, setTopicId] = useState('custom');
+
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const dragStartY = useRef(0);
+  const isDragging = useRef(false);
+
+  const dismiss = () => {
+    const sheet = sheetRef.current;
+    if (!sheet) { onClose(); return; }
+    sheet.style.transition = 'transform 0.25s ease';
+    sheet.style.transform = 'translateY(110%)';
+    setTimeout(onClose, 250);
+  };
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    dragStartY.current = e.touches[0]!.clientY;
+    isDragging.current = false;
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    const sheet = sheetRef.current;
+    if (!sheet) return;
+    const delta = e.touches[0]!.clientY - dragStartY.current;
+    if (delta <= 0) return;
+    if (sheet.scrollTop > 0) return;
+    isDragging.current = true;
+    sheet.style.transition = 'none';
+    sheet.style.overflowY = 'hidden';
+    sheet.style.transform = `translateY(${delta}px)`;
+  };
+
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (!isDragging.current) return;
+    const sheet = sheetRef.current;
+    if (!sheet) return;
+    const delta = e.changedTouches[0]!.clientY - dragStartY.current;
+    isDragging.current = false;
+    sheet.style.overflowY = '';
+    if (delta > DISMISS_THRESHOLD) {
+      dismiss();
+    } else {
+      sheet.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
+      sheet.style.transform = 'translateY(0)';
+    }
+  };
 
   const handleSubmit = async () => {
     if (!english.trim() || !russian.trim()) return;
@@ -29,12 +75,19 @@ const AddWordModal: FC<Props> = ({ onClose, onAdded }) => {
     };
     await putCard(card);
     onAdded();
-    onClose();
+    dismiss();
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-sheet" onClick={e => e.stopPropagation()}>
+    <div className="modal-overlay" onClick={dismiss}>
+      <div
+        ref={sheetRef}
+        className="modal-sheet"
+        onClick={e => e.stopPropagation()}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
         <div className="modal-handle" />
         <div className="modal-title">ДОБАВИТЬ_</div>
         <div className="add-form">

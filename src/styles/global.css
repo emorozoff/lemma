@@ -57,12 +57,14 @@ html, body {
   height: 100%;
   overflow: hidden;
   overscroll-behavior: none;
-}
-
-body {
+  /* Фон со скан-текстурой на html — покрывает весь экран, включая
+     safe-area внизу (home indicator) в standalone-режиме на iPhone. */
   background:
     repeating-linear-gradient(to bottom, transparent 0, transparent 2px, var(--scanline-color) 2px, var(--scanline-color) 3px),
     var(--bg);
+}
+
+body {
   color: var(--text);
   font-family: var(--font-ui);
   font-size: 14px;
