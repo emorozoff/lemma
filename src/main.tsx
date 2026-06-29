@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './styles/global.css'
 import App from './App'
+import { ThemeProvider } from './components/ThemeProvider'
 
 const NUKE_VERSION = 1;
 const nukeKey = 'lemma_nuke_v';
@@ -17,6 +18,8 @@ if (Number(localStorage.getItem(nukeKey)) < NUKE_VERSION) {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <ThemeProvider>
+      <App />
+    </ThemeProvider>
   </StrictMode>,
 )

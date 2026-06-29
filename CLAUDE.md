@@ -10,7 +10,7 @@ Deploy: https://emorozoff.github.io/Lemma/
 
 ## Версия
 
-Текущая версия: **v0.88**
+Текущая версия: **v0.9**
 
 Версия отображается в интерфейсе (хедер, рядом с логотипом).
 
@@ -55,12 +55,13 @@ src/
   types/index.ts       — TypeScript типы
 ```
 
-## Стиль
+## Стиль (с v0.9 — минимализм, без киберпанка)
 
-- Шрифты: VT323 (display), IBM Plex Mono (UI)
-- Цвета: `--accent-green: #00ff88`, `--accent-amber: #ffaa00`, `--accent-red: #ff3366`
-- Тёмный фон `#0d0d0d`, CRT scanline эффект
-- Весь текст-UI — монохромный кибер-стиль
+- Шрифт: IBM Plex Mono (моноширинный — и заголовки, и UI). Все шрифт-переменные → `--font-ui`/`--font-display`.
+- Палитра: чёрный/белый + **один** акцент `--accent: #e5342b` (красный). Токены в `:root`, тинты через `color-mix(in srgb, var(--accent) N%, transparent)` (`--accent-soft`, `--accent-line` и т.д.).
+- Семантика цвета: **красный = активно/верно/бренд**, **серый (`--text-muted`) = неактивно/неверно**. Легаси-алиасы: `--accent-green`/`--accent-amber` → `--accent`; `--accent-red` → `--text-muted`.
+- Светлая/тёмная тема: атрибут `[data-theme]` на `<html>` (тёмная по умолчанию, светлая — `[data-theme="light"]`). `ThemeProvider` + `lib/theme.ts`, переключатель в Настройках, ключ localStorage `lemma_theme`, pre-paint скрипт в `index.html` (без мигания).
+- Тёмная: фон `#0a0a0a`; светлая: фон `#fff`. Без неона, CRT-сканлайнов и глитч-хроматики.
 
 ## Планы на v1.0+
 

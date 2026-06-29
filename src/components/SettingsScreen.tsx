@@ -1,6 +1,8 @@
 import { FC, useRef, useState } from 'react';
 import { clearAllProgress } from '../db';
 import { AudioMode, getAudioMode, setAudioMode, stopSpeech, isManualInputEnabled, setManualInputEnabled } from '../lib/audio';
+import { useTheme } from './ThemeProvider';
+import { THEME_ORDER, THEME_LABELS } from '../lib/theme';
 
 const AUDIO_ORDER: AudioMode[] = ['off', 'word', 'sentence'];
 const AUDIO_LABELS: Record<AudioMode, string> = {
@@ -22,6 +24,12 @@ const SettingsScreen: FC<Props> = ({ onClose, onOpenTopics, onOpenAddWord, onPro
   const [audioMode, setAudioModeState] = useState<AudioMode>(getAudioMode);
   const [manualOn, setManualOn] = useState(isManualInputEnabled);
   const [confirmReset, setConfirmReset] = useState(false);
+  const { mode: themeMode, setMode: setThemeMode } = useTheme();
+
+  const cycleTheme = () => {
+    const idx = THEME_ORDER.indexOf(themeMode);
+    setThemeMode(THEME_ORDER[(idx + 1) % THEME_ORDER.length]!);
+  };
 
   const sheetRef = useRef<HTMLDivElement>(null);
   const dragStartY = useRef(0);
@@ -113,6 +121,11 @@ const SettingsScreen: FC<Props> = ({ onClose, onOpenTopics, onOpenAddWord, onPro
           <span className={`settings-toggle${manualOn ? ' on' : ''}`}>
             {manualOn ? '◉ ВКЛ' : '◎ ВЫКЛ'}
           </span>
+        </div>
+
+        <div className="settings-row" onClick={cycleTheme}>
+          <span className="settings-label">тема</span>
+          <span className="settings-toggle on">{THEME_LABELS[themeMode]}</span>
         </div>
 
         <div className="settings-row" onClick={onOpenTopics}>

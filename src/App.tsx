@@ -73,9 +73,6 @@ export default function App() {
       )}
 
       {blastActive && <SwearingBlast onDone={handleBlastDone} />}
-
-      {/* CRT scanline effect */}
-      <div className="scanline" />
     </div>
   );
 }
