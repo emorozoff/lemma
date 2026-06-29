@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
+    "lint": "eslint .",
+    "test": "vitest run",
     "build:ios": "CAPACITOR=1 tsc -b && CAPACITOR=1 vite build",
     "ios:sync": "npm run build:ios && cap sync ios",
     "ios:open": "npm run ios:sync && cap open ios",
@@ -28,12 +30,19 @@
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^8.3.1",
+    "@eslint/js": "^10.0.1",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.3",
     "compromise": "^14.15.0",
+    "eslint": "^10.6.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.3",
+    "globals": "^17.7.0",
     "typescript": "^5.6.2",
+    "typescript-eslint": "^8.62.1",
     "vite": "^6.0.1",
-    "vite-plugin-pwa": "^0.21.1"
+    "vite-plugin-pwa": "^0.21.1",
+    "vitest": "^4.1.9"
   }
 }

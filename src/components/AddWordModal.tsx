@@ -10,6 +10,15 @@ interface Props {
 
 const DISMISS_THRESHOLD = 100;
 
+// Оборачивает изучаемое слово в примере маркерами **слово**, чтобы своя карточка
+// вела себя как sentence-first (подсветка слова + бланк на финале/быстром вводе).
+function wrapExampleTarget(example: string, word: string): string | undefined {
+  if (!example) return undefined;
+  if (example.includes('**')) return example;
+  const esc = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return example.replace(new RegExp(`(${esc})`, 'i'), '**$1**');
+}
+
 const AddWordModal: FC<Props> = ({ onClose, onAdded }) => {
   const [english, setEnglish] = useState('');
   const [russian, setRussian] = useState('');
@@ -68,7 +77,7 @@ const AddWordModal: FC<Props> = ({ onClose, onAdded }) => {
       english: english.trim(),
       russian: russian.trim(),
       synonyms: synonyms.split(',').map(s => s.trim()).filter(Boolean),
-      example: example.trim() || undefined,
+      example: wrapExampleTarget(example.trim(), english.trim()),
       topicId,
       topicIds: [topicId],
       isCustom: true,

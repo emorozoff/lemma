@@ -189,6 +189,10 @@ button {
   color: #ffffff;
 }
 
+[data-theme="light"] .swearing-word-white {
+  color: #111;
+}
+
 /* ═══ ADDITIONAL STYLES ═══ */
 
 /* App shell */
@@ -736,6 +740,9 @@ button {
   letter-spacing: 1.5px;
   text-transform: uppercase;
   padding: 8px 20px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
   transition: color 0.15s;
   font-family: var(--font-ui);
 }
@@ -1680,6 +1687,11 @@ button {
   opacity: 0.45;
   border: none;
   padding: 4px 10px;
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: none;
   transition: opacity 0.15s;
 }

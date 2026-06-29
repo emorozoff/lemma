@@ -229,7 +229,7 @@ const MainScreen: FC<Props> = ({ prefsVersion, onOpenSettings, onOpenStats }) =>
     // Due cards (SRS reviews) — show all regardless of prefs, exclude archived
     const filteredDue = dueProgress.filter(p => {
       const c = cards.find(cc => cc.id === p.cardId);
-      return c && c.topicId !== 'custom' && !p.archived;
+      return c && !p.archived;
     });
 
     // New cards — sorted by (difficulty, freqLevel), weighted by topic prefs
@@ -269,11 +269,13 @@ const MainScreen: FC<Props> = ({ prefsVersion, onOpenSettings, onOpenStats }) =>
       }
       pool.push(...weighted);
     }
-    // Unique first N (больше в режиме быстрого ввода — для блица)
+    // Свои слова (topicId='custom') показываем всегда и в первую очередь.
+    const customNew = cards.filter(c => c.topicId === 'custom' && !progressMap.has(c.id));
+    // Unique first N (больше в режиме быстрого ввода — для блица); свои слова впереди.
     const newLimit = isFastInputEnabled() ? 60 : 20;
     const seen = new Set<string>();
     const newCards: Card[] = [];
-    for (const card of pool) {
+    for (const card of [...customNew, ...pool]) {
       if (!seen.has(card.id)) {
         seen.add(card.id);
         newCards.push(card);
@@ -297,9 +299,13 @@ const MainScreen: FC<Props> = ({ prefsVersion, onOpenSettings, onOpenStats }) =>
     setAnswered(null);
     if (sc.direction === 'ru-en') {
       typeWord(sc.card.russian);
-    } else {
-      // en-ru: показываем предложение напрямую, без typing-анимации
+    } else if (sc.card.example) {
+      // en-ru с примером: показываем предложение напрямую, без typing-анимации
       setDisplayWord('');
+      setIsTyping(false);
+    } else {
+      // en-ru без примера (напр. своё слово): показываем само слово
+      setDisplayWord(sc.card.english);
       setIsTyping(false);
     }
   }, []);
@@ -628,7 +634,7 @@ const MainScreen: FC<Props> = ({ prefsVersion, onOpenSettings, onOpenStats }) =>
         <div className="header-logo" onClick={() => setDebugOpen(true)} style={{ cursor: 'pointer' }}>
           lemma_
 
-          <span className="header-version">v0.98</span>
+          <span className="header-version">v0.99</span>
         </div>
         <div className="header-known" onClick={onOpenStats} style={{ cursor: 'pointer' }}>
           <span className="header-known-label">знаю слов:</span>
@@ -695,7 +701,7 @@ const MainScreen: FC<Props> = ({ prefsVersion, onOpenSettings, onOpenStats }) =>
                 </div>
               ) : (
                 <div className={`card-word ${sizeClass} ${isTyping ? 'typing' : ''}`}>
-                  {displayWord}
+                  {(isFinale || archiveChallenge) && !answered ? currentCard.card.russian : displayWord}
                 </div>
               )}
               {answered && !answered.wasCorrect && (

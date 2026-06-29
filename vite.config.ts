@@ -58,5 +58,16 @@ export default defineConfig({
         ]
       }
     })
-  ]
+  ],
+  build: {
+    chunkSizeWarningLimit: 3500,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('/src/data/words')) return 'words'
+          if (id.includes('node_modules')) return 'vendor'
+        },
+      },
+    },
+  },
 })
