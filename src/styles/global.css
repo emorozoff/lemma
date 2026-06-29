@@ -59,7 +59,9 @@ html, body {
 }
 
 body {
-  background: var(--bg);
+  background:
+    repeating-linear-gradient(to bottom, transparent 0, transparent 2px, var(--scanline-color) 2px, var(--scanline-color) 3px),
+    var(--bg);
   color: var(--text);
   font-family: var(--font-ui);
   font-size: 14px;
@@ -1853,11 +1855,4 @@ button {
   padding: 8px 4px 16px;
 }
 
-/* Subtle horizontal line texture over the whole screen */
-.scanline {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 500;
-  background: repeating-linear-gradient(to bottom, transparent 0, transparent 2px, var(--scanline-color) 2px, var(--scanline-color) 3px);
-}
+/* Scanline texture lives on the body background (behind all content) — see body{} */
