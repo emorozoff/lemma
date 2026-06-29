@@ -1,5 +1,5 @@
 import React, { FC, useState, useEffect, useRef, useCallback } from 'react';
-import type { Card, SessionCard } from '../types';
+import type { Card, SessionCard, CardProgress } from '../types';
 import {
   getAllCards, getAllProgress, getProgress,
   putProgress, putCards, deleteCard, getDueCards, getKnownCount,
@@ -10,9 +10,9 @@ import { WORDS } from '../data/words';
 import {
   buildQueue, generateOptions, processAnswer, processLevel0Answer, processFinaleAnswer,
   createInitialProgress, getCurrentLevel, getLevelProgress, checkManualAnswer,
-  getToday, MAX_LEVEL,
+  getToday, addDays, MAX_LEVEL,
 } from '../lib/srs';
-import { playCorrect, playWrong, playLevelUp, speakWord, speakSentence, stopSpeech, getAudioMode, isManualInputEnabled } from '../lib/audio';
+import { playCorrect, playWrong, playLevelUp, speakWord, speakSentence, stopSpeech, getAudioMode, isManualInputEnabled, isFastInputEnabled } from '../lib/audio';
 import { hapticLight, hapticWarning, hapticSuccess } from '../lib/native';
 import { getTopicById } from '../data/topics';
 import { loadTopicPrefs, getWeight } from '../lib/topicPrefs';
@@ -120,7 +120,7 @@ const MainScreen: FC<Props> = ({ prefsVersion, onOpenSettings, onOpenStats }) =>
   const [showFirstLetter, setShowFirstLetter] = useState(false);
   const manualInputRef = useRef<HTMLInputElement>(null);
   const manualSubmittedRef = useRef(false);
-  const isFinale = currentLevel === MAX_LEVEL && isManualInputEnabled();
+  const isFinale = isFastInputEnabled() || (currentLevel === MAX_LEVEL && isManualInputEnabled());
 
   // Mini-history: last 5 answered words
   const [history, setHistory] = useState<{ english: string; wasCorrect: boolean; typed?: string }[]>([]);
@@ -269,14 +269,15 @@ const MainScreen: FC<Props> = ({ prefsVersion, onOpenSettings, onOpenStats }) =>
       }
       pool.push(...weighted);
     }
-    // Unique first 20
+    // Unique first N (больше в режиме быстрого ввода — для блица)
+    const newLimit = isFastInputEnabled() ? 60 : 20;
     const seen = new Set<string>();
     const newCards: Card[] = [];
     for (const card of pool) {
       if (!seen.has(card.id)) {
         seen.add(card.id);
         newCards.push(card);
-        if (newCards.length >= 20) break;
+        if (newCards.length >= newLimit) break;
       }
     }
 
@@ -534,7 +535,22 @@ const MainScreen: FC<Props> = ({ prefsVersion, onOpenSettings, onOpenStats }) =>
 
     await recordActivity(getToday());
     const progressFromDB = await getProgress(sc.card.id) ?? createInitialProgress(sc.card.id);
-    const next = processFinaleAnswer(progressFromDB, isCorrect);
+    let next: CardProgress;
+    if (isCorrect) {
+      next = processFinaleAnswer(progressFromDB, true); // в архив = сразу выучено
+    } else if (isFastInputEnabled()) {
+      // Быстрый ввод: ошибка не наказывает уровнем — слово вернётся в обычный
+      // разбор завтра (выбор из 4), а не прыгает в финал.
+      next = {
+        ...progressFromDB,
+        level: Math.max(progressFromDB.level, 1),
+        consecutiveCorrect: 0,
+        totalWrong: progressFromDB.totalWrong + 1,
+        nextReviewDate: addDays(getToday(), 1),
+      };
+    } else {
+      next = processFinaleAnswer(progressFromDB, false);
+    }
     await putProgress(next);
     if (isCorrect) showXp();
     const newKnown = await getKnownCount();
@@ -612,7 +628,7 @@ const MainScreen: FC<Props> = ({ prefsVersion, onOpenSettings, onOpenStats }) =>
         <div className="header-logo" onClick={() => setDebugOpen(true)} style={{ cursor: 'pointer' }}>
           lemma_
 
-          <span className="header-version">v0.95</span>
+          <span className="header-version">v0.96</span>
         </div>
         <div className="header-known" onClick={onOpenStats} style={{ cursor: 'pointer' }}>
           <span className="header-known-label">знаю слов:</span>

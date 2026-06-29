@@ -1,8 +1,9 @@
 import { FC, useRef, useState } from 'react';
 import { clearAllProgress } from '../db';
-import { AudioMode, getAudioMode, setAudioMode, stopSpeech, isManualInputEnabled, setManualInputEnabled } from '../lib/audio';
+import { AudioMode, getAudioMode, setAudioMode, stopSpeech, isManualInputEnabled, setManualInputEnabled, isFastInputEnabled, setFastInputEnabled, preloadAllAudio } from '../lib/audio';
 import { useTheme } from './ThemeProvider';
 import { THEME_ORDER, THEME_LABELS } from '../lib/theme';
+import { WORDS } from '../data/words';
 
 const AUDIO_ORDER: AudioMode[] = ['off', 'word', 'sentence'];
 const AUDIO_LABELS: Record<AudioMode, string> = {
@@ -29,6 +30,23 @@ const SettingsScreen: FC<Props> = ({ onClose, onOpenTopics, onOpenAddWord, onPro
   const cycleTheme = () => {
     const idx = THEME_ORDER.indexOf(themeMode);
     setThemeMode(THEME_ORDER[(idx + 1) % THEME_ORDER.length]!);
+  };
+
+  const [fastOn, setFastOn] = useState(isFastInputEnabled);
+  const toggleFast = () => { const n = !fastOn; setFastInputEnabled(n); setFastOn(n); };
+
+  const [dl, setDl] = useState<{ active: boolean; done: number; total: number }>({ active: false, done: 0, total: 0 });
+  const stopRef = useRef(false);
+  const startDownload = async () => {
+    if (dl.active) { stopRef.current = true; return; }
+    stopRef.current = false;
+    setDl({ active: true, done: 0, total: 0 });
+    await preloadAllAudio(
+      WORDS.map(w => w.english),
+      (done, total) => setDl({ active: true, done, total }),
+      () => stopRef.current,
+    );
+    setDl(prev => ({ ...prev, active: false }));
   };
 
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -123,6 +141,13 @@ const SettingsScreen: FC<Props> = ({ onClose, onOpenTopics, onOpenAddWord, onPro
           </span>
         </div>
 
+        <div className="settings-row" onClick={toggleFast}>
+          <span className="settings-label">быстрый ввод</span>
+          <span className={`settings-toggle${fastOn ? ' on' : ''}`}>
+            {fastOn ? '◉ ВКЛ' : '◎ ВЫКЛ'}
+          </span>
+        </div>
+
         <div className="settings-row" onClick={cycleTheme}>
           <span className="settings-label">тема</span>
           <span className="settings-toggle on">{THEME_LABELS[themeMode]}</span>
@@ -137,6 +162,20 @@ const SettingsScreen: FC<Props> = ({ onClose, onOpenTopics, onOpenAddWord, onPro
           <span className="settings-label">мои слова</span>
           <span className="settings-arrow">→</span>
         </div>
+
+        <div className="settings-row" onClick={startDownload}>
+          <span className="settings-label">загрузить все аудио</span>
+          <span className={`settings-toggle${dl.active ? ' on' : ''}`}>
+            {dl.active
+              ? `${dl.done}/${dl.total || '…'} ✕`
+              : (dl.done > 0 ? 'готово ✓' : '↓ начать')}
+          </span>
+        </div>
+        {dl.active && dl.total > 0 && (
+          <div className="dl-bar">
+            <div className="dl-bar-fill" style={{ width: `${Math.round((dl.done / dl.total) * 100)}%` }} />
+          </div>
+        )}
 
         <div className="settings-section-gap" />
 

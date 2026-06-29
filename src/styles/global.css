@@ -27,8 +27,8 @@
   --accent-red:   var(--text-muted);
 
   --font-logo: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
-  --font-display: 'PT Mono', 'IBM Plex Mono', ui-monospace, Menlo, monospace;
-  --font-ui: 'PT Mono', 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  --font-display: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+  --font-ui: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
@@ -1688,6 +1688,20 @@ button {
 
 .flag-btn-active {
   opacity: 1;
+}
+
+/* Audio download progress bar (Settings) */
+.dl-bar {
+  height: 4px;
+  background: var(--surface2);
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 2px 0 12px;
+}
+.dl-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.2s ease;
 }
 
 /* Flagged list in StatsScreen */

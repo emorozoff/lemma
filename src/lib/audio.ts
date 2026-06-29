@@ -70,6 +70,18 @@ export function setManualInputEnabled(v: boolean): void {
   localStorage.setItem(MANUAL_INPUT_KEY, v ? 'true' : 'false');
 }
 
+// Режим быстрого ввода: каждая карточка — ручной ввод английского по русскому,
+// правильный ответ сразу уходит в архив (выучено). По умолчанию выключен.
+const FAST_INPUT_KEY = 'fast_input_enabled';
+
+export function isFastInputEnabled(): boolean {
+  return localStorage.getItem(FAST_INPUT_KEY) === 'true';
+}
+
+export function setFastInputEnabled(v: boolean): void {
+  localStorage.setItem(FAST_INPUT_KEY, v ? 'true' : 'false');
+}
+
 const TTS_KEY = 'tts_enabled';
 const AUDIO_MODE_KEY = 'audio_mode';
 const AUDIO_CDN = 'https://pub-00a95b8df66f46f597ce91f5544ae35f.r2.dev';
@@ -152,6 +164,35 @@ export function stopSpeech(): void {
     currentSource.onended = null;
     currentSource = null;
   }
+}
+
+// Предзагрузка всех аудио слов: фетчим каждый уникальный slug, чтобы service
+// worker положил mp3 в CacheFirst-кеш (word-audio-cache). Уже закешированные
+// отдаются мгновенно. onProgress(done, total) для прогресс-бара; shouldStop —
+// для остановки пользователем.
+export async function preloadAllAudio(
+  words: string[],
+  onProgress: (done: number, total: number) => void,
+  shouldStop: () => boolean,
+): Promise<void> {
+  const slugs = [...new Set(words.map(toSlug).filter(Boolean))];
+  const total = slugs.length;
+  let done = 0;
+  let idx = 0;
+  onProgress(0, total);
+  const CONCURRENCY = 6;
+  async function worker(): Promise<void> {
+    while (idx < slugs.length) {
+      if (shouldStop()) return;
+      const slug = slugs[idx++]!;
+      try {
+        await fetch(`${AUDIO_CDN}/${slug}.mp3`, { mode: 'cors' });
+      } catch (_) {}
+      done++;
+      onProgress(done, total);
+    }
+  }
+  await Promise.all(Array.from({ length: CONCURRENCY }, () => worker()));
 }
 
 async function sentenceHash(text: string): Promise<string> {
