@@ -228,10 +228,11 @@ const MainScreen: FC<Props> = ({ prefsVersion, onOpenSettings, onOpenStats }) =>
 
     const allProgress = await getAllProgress();
     const progressMap = new Map(allProgress.map(p => [p.cardId, p]));
+    const cardById = new Map(cards.map(c => [c.id, c]));
 
     // Due cards (SRS reviews) — show all regardless of prefs, exclude archived
     const filteredDue = dueProgress.filter(p => {
-      const c = cards.find(cc => cc.id === p.cardId);
+      const c = cardById.get(p.cardId);
       return c && !p.archived;
     });
 
@@ -286,7 +287,22 @@ const MainScreen: FC<Props> = ({ prefsVersion, onOpenSettings, onOpenStats }) =>
       }
     }
 
-    const q = buildQueue(filteredDue, newCards, cards);
+    // Тир 3 «практика наперёд»: карточки с прогрессом, не архив, срок ещё НЕ
+    // подошёл (nextReviewDate > today), из включённых тем. Сорт: дата ↑, затем
+    // уровень ↑. В очереди идут ПОСЛЕ due+new (см. buildQueue) — это убирает
+    // «ожидание по времени»: пока в темах есть незаархивированные слова, всегда
+    // есть что показать, режим (a) — ответы двигают уровень/дату как обычные.
+    const practiceAhead = allProgress
+      .filter(p => !p.archived && p.nextReviewDate > today)
+      .map(p => ({ p, card: cardById.get(p.cardId) }))
+      .filter(x => !!x.card && x.card.topicIds.some(t => getWeight(prefs, t) > 0))
+      .sort((a, b) => {
+        if (a.p.nextReviewDate !== b.p.nextReviewDate) return a.p.nextReviewDate < b.p.nextReviewDate ? -1 : 1;
+        return a.p.level - b.p.level;
+      })
+      .map(x => x.card!);
+
+    const q = buildQueue(filteredDue, newCards, cards, 'mixed', practiceAhead);
 
     setQueue(q);
     setQueueIdx(0);
@@ -672,7 +688,7 @@ const MainScreen: FC<Props> = ({ prefsVersion, onOpenSettings, onOpenStats }) =>
         <div className="header-logo" onClick={() => setDebugOpen(true)} style={{ cursor: 'pointer' }}>
           lemma_
 
-          <span className="header-version">v1.25</span>
+          <span className="header-version">v1.26</span>
         </div>
         <div className="header-known" onClick={onOpenStats} style={{ cursor: 'pointer' }}>
           <span className="header-known-label">знаю слов:</span>

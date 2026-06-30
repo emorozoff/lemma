@@ -185,7 +185,8 @@ export function buildQueue(
   dueProgress: CardProgress[],
   newCards: Card[],
   allCards: Card[],
-  direction: 'mixed' | 'en-ru' | 'ru-en' = 'mixed'
+  direction: 'mixed' | 'en-ru' | 'ru-en' = 'mixed',
+  practiceAhead: Card[] = [],
 ): SessionCard[] {
   const queue: SessionCard[] = [];
 
@@ -204,10 +205,19 @@ export function buildQueue(
     queue.push({ card, direction: pickDirection(card, direction), isRetry: false });
   }
 
-  // Shuffle
+  // Shuffle (только тиры 1–2: повторения и новые)
   for (let i = queue.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [queue[i], queue[j]] = [queue[j]!, queue[i]!];
+  }
+
+  // 3. Практика наперёд (тир 3) — добавляем ПОСЛЕ перемешанных due+new,
+  // СОХРАНЯЯ заданный порядок (он уже отсортирован по приоритету: ближайшая
+  // дата → низкий уровень). Так игрок доходит до них, только когда тиры 1–2
+  // пройдены — «ожидание по времени» исчезает, стена «НЕТ СЛОВ» появляется
+  // лишь когда всё в архиве.
+  for (const card of practiceAhead) {
+    queue.push({ card, direction: pickDirection(card, direction), isRetry: false });
   }
 
   return queue;

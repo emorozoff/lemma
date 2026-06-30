@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   processAnswer, processLevel0Answer, processFinaleAnswer, checkManualAnswer,
   progressScore, getCurrentLevel, getLevelProgress, addDays,
-  generateOptions, MAX_LEVEL,
+  generateOptions, buildQueue, MAX_LEVEL,
 } from './srs';
 import type { Card, CardProgress } from '../types';
 
@@ -98,6 +98,32 @@ describe('levels', () => {
     expect(getLevelProgress(0)).toBe(0);
     expect(getLevelProgress(40)).toBeGreaterThan(0);
     expect(getLevelProgress(40)).toBeLessThan(100);
+  });
+});
+
+describe('buildQueue practice-ahead (tier 3)', () => {
+  const mk = (id: string, en: string, ru: string): Card => ({
+    id, english: en, russian: ru, synonyms: [], topicId: 'basic', topicIds: ['basic'], isCustom: false,
+  });
+  const all: Card[] = [mk('1', 'a', 'а'), mk('2', 'b', 'б'), mk('3', 'c', 'ц'), mk('4', 'd', 'д')];
+
+  it('appends practice-ahead cards after due+new, preserving their order', () => {
+    const due = [p({ cardId: '1', level: 2 })];
+    const newCards = [all[1]!];
+    const practiceAhead = [all[2]!, all[3]!];
+    const q = buildQueue(due, newCards, all, 'en-ru', practiceAhead);
+    expect(q.length).toBe(4);
+    // tier 3 stays last and in given order
+    expect(q[2]!.card.id).toBe('3');
+    expect(q[3]!.card.id).toBe('4');
+    // tiers 1–2 come first (shuffled, order-independent)
+    expect(new Set([q[0]!.card.id, q[1]!.card.id])).toEqual(new Set(['1', '2']));
+  });
+
+  it('without practice-ahead behaves as before (3-arg call valid)', () => {
+    const q = buildQueue([], [all[0]!], all);
+    expect(q.length).toBe(1);
+    expect(q[0]!.card.id).toBe('1');
   });
 });
 
