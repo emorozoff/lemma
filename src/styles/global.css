@@ -32,6 +32,10 @@
   --font-ui: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+  /* Высота приложения: 100dvh, но при открытой клавиатуре JS подменяет на
+     реальную видимую высоту (visualViewport) — см. App.tsx. */
+  --app-h: 100dvh;
+  --kb-inset: 0px;
 }
 
 [data-theme="light"] {
@@ -199,7 +203,7 @@ button {
 
 /* App shell */
 .app {
-  height: 100dvh;
+  height: var(--app-h, 100dvh);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -329,6 +333,9 @@ button {
   justify-content: flex-start;
   padding: 0 16px 8px;
   min-height: 0;
+  /* При сжатии под клавиатуру длинное предложение прокручивается внутри
+     области карточки, а буквы/поле ввода (manual-wrap) остаются на месте. */
+  overflow-y: auto;
 }
 
 .word-card {
@@ -664,7 +671,10 @@ button {
   pointer-events: none;
   width: 1px;
   height: 1px;
-  left: -9999px;
+  /* Должен оставаться в пределах видимого вьюпорта (а не за -9999px),
+     иначе iOS может не поднять клавиатуру при программном фокусе. */
+  left: 0;
+  top: 0;
 }
 
 .manual-submit-btn {

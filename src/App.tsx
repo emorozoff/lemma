@@ -21,6 +21,43 @@ export default function App() {
     return () => clearTimeout(t);
   }, []);
 
+  // На iOS экранная клавиатура НЕ сжимает layout-viewport (100dvh остаётся
+  // полным), поэтому низ экрана с полем ввода уезжает под клавиатуру. Через
+  // visualViewport ловим реальную видимую высоту: пока клавиатура открыта,
+  // сжимаем .app до неё (var --app-h) — карточка и буквы остаются над
+  // клавиатурой; когда закрыта — откатываемся на 100dvh.
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const root = document.documentElement;
+    let raf = 0;
+    const apply = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const kb = Math.max(0, window.innerHeight - vv.height - Math.max(0, vv.offsetTop));
+        if (kb > 120) {
+          root.style.setProperty('--app-h', `${Math.round(vv.height)}px`);
+          root.style.setProperty('--kb-inset', `${Math.round(kb)}px`);
+        } else {
+          root.style.removeProperty('--app-h');
+          root.style.removeProperty('--kb-inset');
+        }
+      });
+    };
+    apply();
+    vv.addEventListener('resize', apply);
+    vv.addEventListener('scroll', apply);
+    // iOS отдаёт устаревшую высоту сразу после закрытия клавиатуры — пере-синк.
+    const onFocusOut = () => setTimeout(apply, 350);
+    window.addEventListener('focusout', onFocusOut);
+    return () => {
+      vv.removeEventListener('resize', apply);
+      vv.removeEventListener('scroll', apply);
+      window.removeEventListener('focusout', onFocusOut);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+
   const handleTopicsClose = useCallback(() => {
     setShowTopics(false);
     setPrefsVersion(v => v + 1);

@@ -521,6 +521,7 @@ const MainScreen: FC<Props> = ({ prefsVersion, onOpenSettings, onOpenStats }) =>
     const correctEnglish = sc.card.english;
     if (!manualInput.trim()) return;
     manualSubmittedRef.current = true;
+    const fast = isFastInputEnabled();
 
     const isCorrect = checkManualAnswer(manualInput, correctEnglish);
     setAnswered({ chosen: manualInput, correct: correctEnglish, wasCorrect: isCorrect });
@@ -532,7 +533,10 @@ const MainScreen: FC<Props> = ({ prefsVersion, onOpenSettings, onOpenStats }) =>
     if (isCorrect) playCorrect();
     else playWrong();
 
-    if (isCorrect) {
+    // В быстром вводе пропускаем медленное аудио слова/предложения (которое
+    // гейтит переход на ~1.6с) — переход делаем мгновенно ниже. Короткий
+    // звук «верно» (playCorrect) уже сыграл выше.
+    if (isCorrect && !fast) {
       if (sc.card.example && sc.direction === 'ru-en') {
         pendingExampleRef.current = { text: sc.card.example, word: sc.card.english };
       }
@@ -544,7 +548,7 @@ const MainScreen: FC<Props> = ({ prefsVersion, onOpenSettings, onOpenStats }) =>
     let next: CardProgress;
     if (isCorrect) {
       next = processFinaleAnswer(progressFromDB, true); // в архив = сразу выучено
-    } else if (isFastInputEnabled()) {
+    } else if (fast) {
       // Быстрый ввод: ошибка не наказывает уровнем — слово вернётся в обычный
       // разбор завтра (выбор из 4), а не прыгает в финал.
       next = {
@@ -565,6 +569,18 @@ const MainScreen: FC<Props> = ({ prefsVersion, onOpenSettings, onOpenStats }) =>
     if (newLvl.title !== prevLevelRef.current) {
       prevLevelRef.current = newLvl.title;
       setTimeout(() => { playLevelUp(); setLevelUp({ title: newLvl.title, description: newLvl.description }); }, 800);
+    }
+
+    // Быстрый ввод — поток «слово за словом»: на верном ответе сразу к
+    // следующей карточке (клавиатура не пропадает, т.к. input персистентный);
+    // на ошибке даём ~1.4с увидеть правильный ответ, затем авто-переход.
+    if (fast) {
+      if (isCorrect) {
+        advance();
+      } else {
+        if (autoAdvanceRef.current) clearTimeout(autoAdvanceRef.current);
+        autoAdvanceRef.current = setTimeout(() => advance(), 1400);
+      }
     }
   };
 
@@ -598,6 +614,12 @@ const MainScreen: FC<Props> = ({ prefsVersion, onOpenSettings, onOpenStats }) =>
   const handleMainZoneTap = useCallback(() => {
     if (answered?.wasCorrect) advance();
   }, [answered, advance]);
+
+  const scrollLettersIntoView = useCallback(() => {
+    setTimeout(() => {
+      document.querySelector('.letter-boxes')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 250);
+  }, []);
 
   const onSwipeTouchStart = (e: React.TouchEvent) => {
     swipeTouchStartX.current = e.touches[0]!.clientX;
@@ -634,7 +656,7 @@ const MainScreen: FC<Props> = ({ prefsVersion, onOpenSettings, onOpenStats }) =>
         <div className="header-logo" onClick={() => setDebugOpen(true)} style={{ cursor: 'pointer' }}>
           lemma_
 
-          <span className="header-version">v1.02</span>
+          <span className="header-version">v1.1</span>
         </div>
         <div className="header-known" onClick={onOpenStats} style={{ cursor: 'pointer' }}>
           <span className="header-known-label">знаю слов:</span>
@@ -781,7 +803,7 @@ const MainScreen: FC<Props> = ({ prefsVersion, onOpenSettings, onOpenStats }) =>
 
       {/* Options / Manual input / Continue */}
       {!isFinished && !loading && currentCard && (
-        answered && !answered.wasCorrect ? (
+        answered && !answered.wasCorrect && !isFastInputEnabled() ? (
           <div className="continue-area">
             <button className="continue-btn" onClick={advance}>
               ДАЛЕЕ →
@@ -812,55 +834,72 @@ const MainScreen: FC<Props> = ({ prefsVersion, onOpenSettings, onOpenStats }) =>
                 );
               })}
             </div>
-            {!answered && (
-              <>
-                <input
-                  ref={archiveChallenge ? archiveInputRef : manualInputRef}
-                  className="manual-input-hidden"
-                  type="text"
-                  value={archiveChallenge ? archiveInput : manualInput}
-                  autoFocus
-                  autoCapitalize="off"
-                  autoCorrect="off"
-                  spellCheck={false}
-                  inputMode="text"
-                  onChange={e => {
-                    const v = e.target.value.toLowerCase().replace(/[^a-z'\s-]/g, '');
-                    if (archiveChallenge) {
+            {archiveChallenge ? (
+              !answered && (
+                <>
+                  <input
+                    ref={archiveInputRef}
+                    className="manual-input-hidden"
+                    type="text"
+                    value={archiveInput}
+                    autoFocus
+                    autoCapitalize="off"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    inputMode="text"
+                    onChange={e => {
+                      const v = e.target.value.toLowerCase().replace(/[^a-z'\s-]/g, '');
                       setArchiveInput(v);
                       if (v.length >= currentCard.card.english.length && checkManualAnswer(v, currentCard.card.english)) {
                         playCorrect();
                         handleArchive();
                       }
-                    } else {
-                      setManualInput(v);
-                    }
-                  }}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') {
-                      if (archiveChallenge) {
-                        if (checkManualAnswer(archiveInput, currentCard.card.english)) {
-                          playCorrect();
-                          handleArchive();
-                        }
-                      } else {
-                        handleManualSubmit();
+                    }}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' && checkManualAnswer(archiveInput, currentCard.card.english)) {
+                        playCorrect();
+                        handleArchive();
                       }
-                    }
-                  }}
-                  onFocus={() => {
-                    setTimeout(() => {
-                      const el = document.querySelector('.letter-boxes');
-                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }, 350);
-                  }}
-                />
-                {archiveChallenge ? (
+                    }}
+                    onFocus={scrollLettersIntoView}
+                  />
                   <button className="manual-submit-btn" onClick={() => { if (Date.now() - archiveChallengeAtRef.current < 500) return; setArchiveChallenge(false); setArchiveInput(''); }}>
                     ОТМЕНА
                   </button>
-                ) : (
-                  <button className="manual-submit-btn" onClick={handleManualSubmit} disabled={!manualInput.trim()}>
+                </>
+              )
+            ) : (
+              <>
+                {/* Персистентный input быстрого ввода/финала: смонтирован всю
+                    сессию, НЕ гейтится answered и не пересоздаётся между
+                    карточками — iOS держит клавиатуру, пока он в фокусе.
+                    Между словами лишь сбрасываем value (см. эффект reset). */}
+                <input
+                  ref={manualInputRef}
+                  className="manual-input-hidden"
+                  type="text"
+                  value={manualInput}
+                  autoFocus
+                  autoCapitalize="off"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  inputMode="text"
+                  enterKeyHint="next"
+                  onChange={e => {
+                    if (answered) return;
+                    const v = e.target.value.toLowerCase().replace(/[^a-z'\s-]/g, '');
+                    setManualInput(v);
+                  }}
+                  onKeyDown={e => { if (e.key === 'Enter') handleManualSubmit(); }}
+                  onFocus={scrollLettersIntoView}
+                />
+                {!answered && (
+                  <button
+                    className="manual-submit-btn"
+                    onMouseDown={e => e.preventDefault()}
+                    onClick={handleManualSubmit}
+                    disabled={!manualInput.trim()}
+                  >
                     ПРОВЕРИТЬ
                   </button>
                 )}
