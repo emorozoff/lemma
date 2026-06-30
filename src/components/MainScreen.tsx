@@ -472,16 +472,14 @@ const MainScreen: FC<Props> = ({ prefsVersion, onOpenSettings, onOpenStats }) =>
     if (next < queue.length) {
       setQueueIdx(next);
       setupCard(queue[next]!, allCards);
-    } else if (isFastInputEnabled()) {
-      // Быстрый ввод: очередь кончилась — дозагружаем следующую партию, чтобы
-      // продолжать без остановки. Если карточек больше нет, loadQueue выставит
-      // пустую очередь и покажется «НЕТ СЛОВ».
+    } else {
+      // Очередь кончилась — дозагружаем следующую партию и продолжаем без
+      // остановки (в ОБЫЧНОМ режиме тоже — стены «НЕТ СЛОВ» больше нет). Если
+      // карточек реально не осталось (нет ни повторений, ни новых, либо не
+      // выбраны темы), loadQueue выставит пустую очередь — тогда покажется
+      // «НЕТ СЛОВ» как настоящий конец.
       setRefilling(true);
       loadQueueRef.current(allCards).finally(() => setRefilling(false));
-    } else {
-      setQueueIdx(next);
-      setAnswered(null);
-      setDisplayWord('');
     }
   }, [queueIdx, queue, allCards, setupCard]);
 
@@ -674,7 +672,7 @@ const MainScreen: FC<Props> = ({ prefsVersion, onOpenSettings, onOpenStats }) =>
         <div className="header-logo" onClick={() => setDebugOpen(true)} style={{ cursor: 'pointer' }}>
           lemma_
 
-          <span className="header-version">v1.241</span>
+          <span className="header-version">v1.25</span>
         </div>
         <div className="header-known" onClick={onOpenStats} style={{ cursor: 'pointer' }}>
           <span className="header-known-label">знаю слов:</span>
