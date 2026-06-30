@@ -1,4 +1,4 @@
-import { FC, useRef, useState } from 'react';
+import { FC, useRef, useState, useEffect } from 'react';
 import { clearAllProgress, exportData, importData } from '../db';
 import { AudioMode, getAudioMode, setAudioMode, stopSpeech, isLenientInputEnabled, setLenientInputEnabled, isFastInputEnabled, setFastInputEnabled, preloadAllAudio } from '../lib/audio';
 import { useTheme } from './ThemeProvider';
@@ -24,7 +24,11 @@ const DISMISS_THRESHOLD = 100;
 const SettingsScreen: FC<Props> = ({ onClose, onOpenTopics, onOpenAddWord, onProgressReset }) => {
   const [audioMode, setAudioModeState] = useState<AudioMode>(getAudioMode);
   const [lenientOn, setLenientOn] = useState(isLenientInputEnabled);
-  const [confirmReset, setConfirmReset] = useState(false);
+  const [holdPct, setHoldPct] = useState(0);
+  const [showResetWarn, setShowResetWarn] = useState(false);
+  const [showResetFinal, setShowResetFinal] = useState(false);
+  const holdTimerRef = useRef<number | null>(null);
+  const holdStartRef = useRef(0);
   const { mode: themeMode, setMode: setThemeMode } = useTheme();
 
   const cycleTheme = () => {
@@ -163,10 +167,27 @@ const SettingsScreen: FC<Props> = ({ onClose, onOpenTopics, onOpenAddWord, onPro
     location.reload();
   };
 
+  const RESET_HOLD_MS = 10000;
+  const startHold = (e: React.PointerEvent<HTMLButtonElement>) => {
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+    holdStartRef.current = Date.now();
+    if (holdTimerRef.current) clearInterval(holdTimerRef.current);
+    holdTimerRef.current = window.setInterval(() => {
+      const pct = Math.min(100, ((Date.now() - holdStartRef.current) / RESET_HOLD_MS) * 100);
+      setHoldPct(pct);
+      if (pct >= 100) { cancelHold(); setShowResetWarn(true); }
+    }, 50);
+  };
+  const cancelHold = () => {
+    if (holdTimerRef.current) { clearInterval(holdTimerRef.current); holdTimerRef.current = null; }
+    setHoldPct(0);
+  };
+  useEffect(() => () => { if (holdTimerRef.current) clearInterval(holdTimerRef.current); }, []);
+
   const handleReset = async () => {
     await clearAllProgress();
     onProgressReset();
-    setConfirmReset(false);
+    setShowResetFinal(false);
     dismiss();
   };
 
@@ -258,21 +279,50 @@ const SettingsScreen: FC<Props> = ({ onClose, onOpenTopics, onOpenAddWord, onPro
 
         <div className="settings-section-gap" />
 
-        <button className="settings-danger-btn" onClick={() => setConfirmReset(true)}>
-          сбросить прогресс
+        <button
+          className="settings-danger-btn reset-hold-btn"
+          onPointerDown={startHold}
+          onPointerUp={cancelHold}
+          onPointerCancel={cancelHold}
+          onContextMenu={e => e.preventDefault()}
+        >
+          <span className="reset-hold-fill" style={{ width: `${holdPct}%` }} />
+          <span className="reset-hold-label">
+            {holdPct > 0 ? `держи… ${Math.ceil((100 - holdPct) / 10)}` : 'сбросить прогресс'}
+          </span>
         </button>
       </div>
 
-      {confirmReset && (
-        <div className="modal-overlay settings-confirm-overlay" onClick={() => setConfirmReset(false)}>
+      {showResetWarn && (
+        <div className="modal-overlay settings-confirm-overlay" onClick={() => setShowResetWarn(false)}>
           <div className="debug-panel" onClick={e => e.stopPropagation()}>
-            <div className="debug-title">// УДАЛИТЬ ВЕСЬ ПРОГРЕСС?</div>
+            <div className="debug-title">// СБРОС ПРОГРЕССА</div>
             <div className="settings-confirm-body">
-              Это действие нельзя отменить. Все выученные слова вернутся в уровень 0.
+              Это полностью обнулит прогресс и НЕ может быть отменено:
+              <br />• все выученные слова вернутся на уровень 0;
+              <br />• счётчик «знаю слов» станет 0;
+              <br />• архив выученных слов очистится;
+              <br />• история активности (дни, серия) сотрётся.
+              <br /><br />Слова с флажком останутся. Хочешь сохранить — сначала «сохранить прогресс».
             </div>
             <div className="debug-grid">
-              <button className="debug-btn" onClick={() => setConfirmReset(false)}>отмена</button>
-              <button className="debug-btn danger" onClick={handleReset}>удалить всё</button>
+              <button className="debug-btn" onClick={() => setShowResetWarn(false)}>отмена</button>
+              <button className="debug-btn danger" onClick={() => { setShowResetWarn(false); setShowResetFinal(true); }}>сбросить</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showResetFinal && (
+        <div className="modal-overlay settings-confirm-overlay" onClick={() => setShowResetFinal(false)}>
+          <div className="debug-panel" onClick={e => e.stopPropagation()}>
+            <div className="debug-title">// ТОЧНО СБРОСИТЬ?</div>
+            <div className="settings-confirm-body">
+              Последнее предупреждение. Весь прогресс будет удалён безвозвратно.
+            </div>
+            <div className="debug-grid">
+              <button className="debug-btn" onClick={() => setShowResetFinal(false)}>отмена</button>
+              <button className="debug-btn danger" onClick={handleReset}>да, сбросить</button>
             </div>
           </div>
         </div>
