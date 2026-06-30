@@ -131,7 +131,7 @@ const StatsScreen: FC<Props> = ({ onClose }) => {
           </div>
         </div>
         {archived > 0 && (
-          <div className="stats-archived-row">архивировано: {archived} слов</div>
+          <div className="stats-archived-row">знаю слов: {archived}</div>
         )}
 
         <div className="stats-section-title">РАСПРЕДЕЛЕНИЕ ПО УРОВНЯМ</div>
