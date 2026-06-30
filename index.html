@@ -10,6 +10,12 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Lemma" />
+    <!-- Корневая непрозрачная иконка по умолчанию (белый фон). На iOS НЕТ
+         поддержки отдельной dark-иконки для веб-приложений: media-атрибут на
+         apple-touch-icon Safari игнорирует, ключа темы в манифесте нет. Непро-
+         зрачная иконка не затемняется в Светлом/Тёмном/Авто; «С оттенком»
+         (Tinted) перекрашивает все иконки на уровне ОС — это не переопределить. -->
+    <link rel="apple-touch-icon" href="/lemma/apple-touch-icon.png" />
     <link rel="apple-touch-icon" sizes="57x57"   href="/lemma/icons/icon-57.png" />
     <link rel="apple-touch-icon" sizes="60x60"   href="/lemma/icons/icon-60.png" />
     <link rel="apple-touch-icon" sizes="72x72"   href="/lemma/icons/icon-72.png" />

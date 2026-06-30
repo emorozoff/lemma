@@ -41,8 +41,18 @@ const SettingsScreen: FC<Props> = ({ onClose, onOpenTopics, onOpenAddWord, onPro
     if (dl.active) { stopRef.current = true; return; }
     stopRef.current = false;
     setDl({ active: true, done: 0, total: 0 });
+    // Грузим от самых лёгких слов к сложным: сначала по уровню сложности
+    // (difficulty 1=A1 … 6=C2), при равенстве — по частотности (freqLevel:
+    // меньше = более частотное = легче). Так пользователь раньше всего
+    // получает аудио для слов, которые встретит первыми.
+    const easyFirst = [...WORDS]
+      .sort((a, b) =>
+        (a.difficulty ?? 3) - (b.difficulty ?? 3) ||
+        (a.freqLevel ?? 5) - (b.freqLevel ?? 5),
+      )
+      .map(w => w.english);
     await preloadAllAudio(
-      WORDS.map(w => w.english),
+      easyFirst,
       (done, total) => setDl({ active: true, done, total }),
       () => stopRef.current,
     );
