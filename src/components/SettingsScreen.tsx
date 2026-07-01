@@ -162,11 +162,6 @@ const SettingsScreen: FC<Props> = ({ onClose, onOpenTopics, onOpenAddWord, onPro
     setLenientOn(next);
   };
 
-  const restartOnboarding = () => {
-    try { localStorage.removeItem('lemma_onboarded'); } catch { /* ignore */ }
-    location.reload();
-  };
-
   const RESET_HOLD_MS = 10000;
   const startHold = (e: React.PointerEvent<HTMLButtonElement>) => {
     e.currentTarget.setPointerCapture?.(e.pointerId);
@@ -271,11 +266,6 @@ const SettingsScreen: FC<Props> = ({ onClose, onOpenTopics, onOpenAddWord, onPro
           style={{ display: 'none' }}
         />
         {backupMsg && <div className="settings-confirm-body">{backupMsg}</div>}
-
-        <div className="settings-row" onClick={restartOnboarding}>
-          <span className="settings-label">пройти обучение заново</span>
-          <span className="settings-arrow">↻</span>
-        </div>
 
         <div className="settings-section-gap" />
 

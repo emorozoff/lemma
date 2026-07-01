@@ -737,9 +737,9 @@ button {
 /* Bottom nav */
 .bottom-nav {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 24px 14px;
+  align-items: stretch;
+  justify-content: space-around;
+  padding: 8px 12px 12px;
   border-top: 1px solid var(--border);
   flex-shrink: 0;
 }
@@ -748,16 +748,24 @@ button {
   background: none;
   border: none;
   color: var(--text-muted);
-  font-size: 16px;
+  font-size: 11px;
   cursor: pointer;
-  letter-spacing: 1.5px;
+  letter-spacing: 1px;
   text-transform: uppercase;
-  padding: 8px 20px;
+  padding: 6px 14px;
   min-height: 44px;
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
+  gap: 5px;
   transition: color 0.15s;
   font-family: var(--font-ui);
+}
+.nav-icon {
+  width: 23px;
+  height: 23px;
+  fill: currentColor;
+  display: block;
 }
 
 .nav-btn.center {

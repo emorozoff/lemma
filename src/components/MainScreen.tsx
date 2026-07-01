@@ -24,6 +24,7 @@ interface Props {
   prefsVersion: number;
   onOpenSettings: () => void;
   onOpenStats: () => void;
+  onOpenTopics: () => void;
 }
 
 function renderExample(example: string, englishWord: string): React.ReactNode {
@@ -73,7 +74,18 @@ function getWordSizeClass(word: string): string {
 
 const TYPING_SPEED_MS = 40;
 
-const MainScreen: FC<Props> = ({ prefsVersion, onOpenSettings, onOpenStats }) => {
+// Иконки нижней навигации — Material Symbols Sharp (заливка), viewBox 0 -960 960 960.
+const NAV_ICON = {
+  settings: 'm370-80-16-128q-13-5-24.5-12T307-235l-119 50L78-375l103-78q-1-7-1-13.5v-27q0-6.5 1-13.5L78-585l110-190 119 50q11-8 23-15t24-12l16-128h220l16 128q13 5 24.5 12t22.5 15l119-50 110 190-103 78q1 7 1 13.5v27q0 6.5-2 13.5l103 78-110 190-118-50q-11 8-23 15t-24 12L590-80H370Zm112-260q58 0 99-41t41-99q0-58-41-99t-99-41q-59 0-99.5 41T342-480q0 58 40.5 99t99.5 41Z',
+  topics: 'M120-520v-320h320v320H120Zm0 400v-320h320v320H120Zm400-400v-320h320v320H520Zm0 400v-320h320v320H520Z',
+  stats: 'M640-160v-280h160v280H640Zm-240 0v-640h160v640H400Zm-240 0v-440h160v440H160Z',
+} as const;
+
+const NavIcon: FC<{ d: string }> = ({ d }) => (
+  <svg className="nav-icon" viewBox="0 -960 960 960" aria-hidden="true"><path d={d} /></svg>
+);
+
+const MainScreen: FC<Props> = ({ prefsVersion, onOpenSettings, onOpenStats, onOpenTopics }) => {
   const [queue, setQueue]           = useState<SessionCard[]>([]);
   const [queueIdx, setQueueIdx]     = useState(0);
   const [options, setOptions]       = useState<string[]>([]);
@@ -688,7 +700,7 @@ const MainScreen: FC<Props> = ({ prefsVersion, onOpenSettings, onOpenStats }) =>
         <div className="header-logo" onClick={() => setDebugOpen(true)} style={{ cursor: 'pointer' }}>
           lemma_
 
-          <span className="header-version">v1.291</span>
+          <span className="header-version">v1.292</span>
         </div>
         <div className="header-known" onClick={onOpenStats} style={{ cursor: 'pointer' }}>
           <span className="header-known-label">знаю слов:</span>
@@ -1015,8 +1027,9 @@ const MainScreen: FC<Props> = ({ prefsVersion, onOpenSettings, onOpenStats }) =>
 
       {/* Bottom nav */}
       <div className="bottom-nav">
-        <button className="nav-btn" onClick={onOpenSettings}>НАСТРОЙКИ</button>
-        <button className="nav-btn" onClick={onOpenStats}>СТАТИСТИКА</button>
+        <button className="nav-btn" onClick={onOpenSettings}><NavIcon d={NAV_ICON.settings} />настройки</button>
+        <button className="nav-btn" onClick={onOpenTopics}><NavIcon d={NAV_ICON.topics} />темы</button>
+        <button className="nav-btn" onClick={onOpenStats}><NavIcon d={NAV_ICON.stats} />статистика</button>
       </div>
 
       {/* XP toast */}

@@ -91,6 +91,7 @@ export default function App() {
         prefsVersion={prefsVersion}
         onOpenSettings={() => setShowSettings(true)}
         onOpenStats={() => setShowStats(true)}
+        onOpenTopics={() => setShowTopics(true)}
       />
 
       {showSettings && (
