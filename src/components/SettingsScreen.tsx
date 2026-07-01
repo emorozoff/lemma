@@ -14,14 +14,13 @@ const AUDIO_LABELS: Record<AudioMode, string> = {
 
 interface Props {
   onClose: () => void;
-  onOpenTopics: () => void;
   onOpenAddWord: () => void;
   onProgressReset: () => void;
 }
 
 const DISMISS_THRESHOLD = 100;
 
-const SettingsScreen: FC<Props> = ({ onClose, onOpenTopics, onOpenAddWord, onProgressReset }) => {
+const SettingsScreen: FC<Props> = ({ onClose, onOpenAddWord, onProgressReset }) => {
   const [audioMode, setAudioModeState] = useState<AudioMode>(getAudioMode);
   const [lenientOn, setLenientOn] = useState(isLenientInputEnabled);
   const [holdPct, setHoldPct] = useState(0);
@@ -223,11 +222,6 @@ const SettingsScreen: FC<Props> = ({ onClose, onOpenTopics, onOpenAddWord, onPro
         <div className="settings-row" onClick={cycleTheme}>
           <span className="settings-label">тема</span>
           <span className="settings-toggle on">{THEME_LABELS[themeMode]}</span>
-        </div>
-
-        <div className="settings-row" onClick={onOpenTopics}>
-          <span className="settings-label">темы</span>
-          <span className="settings-arrow">→</span>
         </div>
 
         <div className="settings-row" onClick={onOpenAddWord}>

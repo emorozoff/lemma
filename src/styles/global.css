@@ -227,16 +227,25 @@ button {
 
 /* App shell */
 .app {
-  height: var(--app-h, 100dvh);
+  /* Пиним приложение к вьюпорту через fixed top/bottom, а не height:100dvh —
+     на iOS `bottom: 0` fixed надёжнее достаёт до реального низа экрана, чем
+     единицы vh/dvh (которые на некоторых устройствах короче экрана → пустая
+     полоса снизу). Клавиатура поджимает через --kb-inset (см. App.tsx).
+     Центрируем left/right+margin auto (без transform — иначе он бы стал
+     containing-block для fixed-модалок). */
+  position: fixed;
+  top: 0;
+  bottom: var(--kb-inset, 0px);
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 480px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   padding-top: var(--safe-top);
   padding-bottom: var(--safe-bottom);
-  max-width: 480px;
-  margin: 0 auto;
-  width: 100%;
-  position: relative;
 }
 
 /* Header */

@@ -115,7 +115,6 @@ export default function App() {
       {showSettings && (
         <SettingsScreen
           onClose={() => setShowSettings(false)}
-          onOpenTopics={() => setShowTopics(true)}
           onOpenAddWord={() => setShowAddWord(true)}
           onProgressReset={handleProgressReset}
         />
