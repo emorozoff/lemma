@@ -544,7 +544,9 @@ const MainScreen: FC<Props> = ({ prefsVersion, onOpenSettings, onOpenStats, onOp
     if (!sc) { setArchiveChallenge(false); return; }
 
     const progressFromDB = await getProgress(sc.card.id) ?? createInitialProgress(sc.card.id);
-    await putProgress({ ...progressFromDB, archived: true });
+    // Архив = полностью выучено → выставляем level MAX (иначе строка остаётся с
+    // level 0 и счётчики по уровню/темам её не видят; см. TopicModal/getLevelDistribution).
+    await putProgress({ ...progressFromDB, level: MAX_LEVEL, archived: true });
 
     const newKnown = await getKnownCount();
     setKnownCount(newKnown);
@@ -711,7 +713,7 @@ const MainScreen: FC<Props> = ({ prefsVersion, onOpenSettings, onOpenStats, onOp
         <div className="header-logo" onClick={() => setDebugOpen(true)} style={{ cursor: 'pointer' }}>
           lemma_
 
-          <span className="header-version">v1.323</span>
+          <span className="header-version">v1.324</span>
         </div>
         <div className="header-known" onClick={onOpenStats} style={{ cursor: 'pointer' }}>
           <span className="header-known-label">знаю слов:</span>

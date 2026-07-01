@@ -47,7 +47,11 @@ const TopicModal: FC<Props> = ({ onClose, onSwearingActivated }) => {
   useEffect(() => {
     const load = async () => {
       const [cards, progress] = await Promise.all([getAllCards(), getAllProgress()]);
-      const knownSet = new Set(progress.filter(p => p.level >= 1).map(p => p.cardId));
+      // «Известно» = архив (полностью выучено) ИЛИ level >= 1. Архивные карточки
+      // из шортката (зажать вариант → архив-челлендж) исторически могли иметь
+      // level 0 — их обязательно учитываем по флагу archived, иначе счётчик тем
+      // сильно занижен относительно шапки «знаю слов» (та считает архив за 1.0).
+      const knownSet = new Set(progress.filter(p => p.archived || p.level >= 1).map(p => p.cardId));
       const result: Record<string, TopicStats> = {};
       for (const topic of TOPICS) {
         const topicCards = cards.filter(c => c.topicIds.includes(topic.id));

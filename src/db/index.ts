@@ -140,7 +140,9 @@ export async function getLevelDistribution(): Promise<Record<number, number>> {
   const dist: Record<number, number> = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0 };
   for (const p of all) {
     if (!valid.has(p.cardId)) continue; // орфан удалённой карточки
-    const lvl = Math.min(p.level, 4);
+    // Архив = полностью выучено → всегда в верхний бакет (level 4), даже если
+    // строка прогресса исторически осталась с level 0 (шорткат-архив).
+    const lvl = p.archived ? 4 : Math.min(p.level, 4);
     dist[lvl] = (dist[lvl] ?? 0) + 1;
   }
   return dist;
