@@ -171,4 +171,30 @@ describe('generateOptions', () => {
       expect(opts).not.toContain('дома');
     }
   });
+
+  it('never offers a same-senseKey синоним as a distractor (Layer 2: мама vs мать)', () => {
+    const mkS = (id: string, en: string, ru: string, senseKey?: string): Card => ({
+      id, english: en, russian: ru, synonyms: [], topicId: 'family', topicIds: ['family'], isCustom: false, senseKey,
+    });
+    const cards: Card[] = [
+      mkS('1', 'mom', 'мама', 'family__mother'),
+      mkS('2', 'mother', 'мать', 'family__mother'),
+      mkS('3', 'mommy', 'мамочка', 'family__mother'),
+      mkS('4', 'dad', 'папа', 'family__father'),
+      mkS('5', 'sister', 'сестра'),
+      mkS('6', 'brother', 'брат'),
+    ];
+    for (let i = 0; i < 30; i++) {
+      // en-ru: correct = мама, must not offer мать/мамочка (same sense)
+      const opts = generateOptions(cards[0]!, 'en-ru', cards);
+      expect(opts).toContain('мама');
+      expect(opts).not.toContain('мать');
+      expect(opts).not.toContain('мамочка');
+      // ru-en: correct = mom, must not offer mother/mommy (same sense)
+      const optsEn = generateOptions(cards[0]!, 'ru-en', cards);
+      expect(optsEn).toContain('mom');
+      expect(optsEn).not.toContain('mother');
+      expect(optsEn).not.toContain('mommy');
+    }
+  });
 });

@@ -353,7 +353,7 @@ export function generateOptions(
       let score = distractorScore(correctAnswer, text, c.topicIds.some(t => correctCard.topicIds.includes(t)));
       // Same word count is a hard preference
       if (wordCount === correctWordCount) score += 10;
-      return { text, norm: normalizeText(text), score };
+      return { text, norm: normalizeText(text), score, senseKey: c.senseKey };
     })
     // Hard rule 1: a distractor that equals the correct answer (case/whitespace
     // insensitive) would be a *second* correct option — drop it. This catches
@@ -361,7 +361,11 @@ export function generateOptions(
     .filter(d => d.norm !== correctNorm)
     // Hard rule 2: a distractor that's a different inflection of the same word
     // (получает/получать, gets/getting) is too easy to confuse — drop it.
-    .filter(d => !isSameLemma(correctAnswer, d.text, direction));
+    .filter(d => !isSameLemma(correctAnswer, d.text, direction))
+    // Hard rule 3 (Слой 2): a distractor that's a разнокоренной синоним of the
+    // correct answer (мама/мать, mom/mother) — same senseKey group — is an unfair
+    // wrong option. Морфологию ловит isSameLemma; синонимы ловит senseKey.
+    .filter(d => !(correctCard.senseKey && d.senseKey === correctCard.senseKey));
 
   // Sort by score desc, take top bucket and shuffle to add variety
   scored.sort((a, b) => b.score - a.score);

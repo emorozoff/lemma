@@ -9,6 +9,8 @@ export interface Card {
   isCustom: boolean;
   difficulty?: number; // 1–6, соответствует A1–C2 (субъективная оценка агентом при генерации)
   freqLevel?: number; // 1–10, рассчитывается из SUBTLEX-частотности (внутренняя сортировка)
+  senseKey?: string; // Слой 2: группа значения (синонимы мама/мать). Карточки с одним senseKey
+                     // не показываются дистракторами друг для друга (см. generateOptions).
 }
 
 export interface CardProgress {
