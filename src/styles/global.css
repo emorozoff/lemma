@@ -1714,14 +1714,14 @@ button {
 }
 
 .flag-btn {
-  font-size: 21px;
+  font-size: 42px;
   line-height: 1;
   color: var(--accent);
   opacity: 0.45;
   border: none;
   padding: 4px 10px;
-  min-width: 44px;
-  min-height: 44px;
+  min-width: 64px;
+  min-height: 64px;
   display: inline-flex;
   align-items: center;
   justify-content: center;

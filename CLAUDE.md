@@ -12,7 +12,7 @@ Deploy: https://emorozoff.github.io/lemma/
 
 ## Версия
 
-Текущая версия: **v1.321**
+Текущая версия: **v1.322**
 
 Версия отображается в интерфейсе (хедер, рядом с логотипом).
 
@@ -118,7 +118,7 @@ src/
 - ✅ Фаза 2 (сокращение по полезности) — v1.29, −490 (457 жаргон/детали/редкое + 34 номинализации cleaning/scanning/characters...). Враждебная перепроверка спасла 473 пограничных.
 - ✅ Фаза 2b (агрессивное сокращение) — v1.30, −1752. Часть А (дедуп производных cleaning→clean, номинализации -ing/-ion/-ment/-er/-ness/-al): 469 кандидатов → 131 cut моделью, но 76 из них оказались важными базовыми словами (information, decision, development, organization, management, agreement, production, activity, driving, reading, swimming, parking...) — срезаны только 55 с freqLevel≥6 (реально нишевые: settlement, retirement, refueling, postponement, authentication, routing, volatility, subscriber, snowboarding...). Часть Б (строгий usefulness-проход по freqLevel≥7, default-CUT): 2813 слов → 1729 cut, откалибровано по примерам пользователя (allergy/refugee/thermostat/prerequisite — keep; solitude/commodity/harmonica/tarmac/prospectus/trellis — cut), враждебная перепроверка спасла полезные редкие слова.
 - ✅ Фаза 3 (Слой 2 — группы значения, синонимы мама/мать) — v1.31. Поле `senseKey?` в Card (types/index.ts). Кластеризация по темам (basic split×4 + 21 тема, judge+verify): 137 групп синонимов, 290 карточек получили senseKey (family__mother = mother/mom/mum/mommy и т.п.). `generateOptions` (srs.ts, Hard rule 3) исключает дистрактор с тем же senseKey, что у верного ответа. Тест «мама vs мать» в srs.test.ts (обе стороны en-ru/ru-en). Слуг senseKey = `{topic}__{english_concept}`. Ограничение: кластеризация по ПЕРВИЧНОМУ topicId, кросс-темные синонимы не ловятся (редкий кейс, дистракторы почти всегда из той же темы).
-Удаление — ВСЕГДА правкой `words.ts` напрямую (стабильные ID, по id+english чтобы не задеть дубль-id). Caveat: удаление выученной карточки делает её прогресс «висячим» — приемлемо.
+Удаление — ВСЕГДА правкой `words.ts` напрямую (стабильные ID, по id+english чтобы не задеть дубль-id). Caveat: удаление выученной карточки делает её прогресс «висячим» в IndexedDB (строка progress остаётся). С v1.322 счётчики (`getKnownCount`/`getArchivedCount`/`getLevelDistribution`) ИГНОРИРУЮТ висячий прогресс — фильтруют по id существующих карточек (`getValidCardIds` из cards-стора, который синхронизируется с WORDS при загрузке). До этого шапка «знаю слов» была завышена относительно суммы по темам (после ревизии −2800 карточек у пользователя оставался прогресс удалённых слов). Сама строка progress не удаляется (не деструктивно), но нигде не учитывается: очередь тоже фильтрует по существованию карточки.
 
 Ниже — исходные правила/решения по каждой задаче (в силе).
 

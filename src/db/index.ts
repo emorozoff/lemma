@@ -105,11 +105,22 @@ export async function getDueCards(today: string): Promise<CardProgress[]> {
 }
 
 // Дробный счётчик: level × 0.2 для lvl 1–4, архив = 1.0. Сумма округляется.
+// Множество id карточек, реально существующих в текущей базе (cards-стор
+// синхронизируется с WORDS при загрузке — см. self-heal reseed в MainScreen).
+// Прогресс удалённых при ревизии карточек остаётся «висячим» в IndexedDB —
+// его НЕ учитываем в счётчиках, иначе шапка «знаю слов» завышена относительно
+// суммы по темам (TopicModal считает только по существующим карточкам).
+async function getValidCardIds(db: IDBPDatabase<LemmaDB>): Promise<Set<string>> {
+  const keys = await db.getAllKeys('cards');
+  return new Set(keys as string[]);
+}
+
 export async function getKnownCount(): Promise<number> {
   const db = await getDB();
-  const all = await db.getAll('progress');
+  const [all, valid] = await Promise.all([db.getAll('progress'), getValidCardIds(db)]);
   let sum = 0;
   for (const p of all) {
+    if (!valid.has(p.cardId)) continue; // орфан удалённой карточки
     if (p.archived) { sum += 1; continue; }
     if (p.level <= 0) continue;
     sum += Math.min(p.level, 4) * 0.2;
@@ -119,15 +130,16 @@ export async function getKnownCount(): Promise<number> {
 
 export async function getArchivedCount(): Promise<number> {
   const db = await getDB();
-  const all = await db.getAll('progress');
-  return all.filter(p => !!p.archived).length;
+  const [all, valid] = await Promise.all([db.getAll('progress'), getValidCardIds(db)]);
+  return all.filter(p => !!p.archived && valid.has(p.cardId)).length;
 }
 
 export async function getLevelDistribution(): Promise<Record<number, number>> {
   const db = await getDB();
-  const all = await db.getAll('progress');
+  const [all, valid] = await Promise.all([db.getAll('progress'), getValidCardIds(db)]);
   const dist: Record<number, number> = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0 };
   for (const p of all) {
+    if (!valid.has(p.cardId)) continue; // орфан удалённой карточки
     const lvl = Math.min(p.level, 4);
     dist[lvl] = (dist[lvl] ?? 0) + 1;
   }

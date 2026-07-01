@@ -1,5 +1,5 @@
 import { FC, useEffect, useState, useRef } from 'react';
-import { getAllProgress, getActivity, countCards, getAllFlagged, deleteFlagged, getKnownCount } from '../db';
+import { getLevelDistribution, getActivity, countCards, getAllFlagged, deleteFlagged, getKnownCount } from '../db';
 import type { FlaggedCard } from '../types';
 import type { DayActivity } from '../types';
 
@@ -30,8 +30,8 @@ const StatsScreen: FC<Props> = ({ onClose }) => {
 
   useEffect(() => {
     const load = async () => {
-      const [prog, act, cnt, flagged, kc] = await Promise.all([
-        getAllProgress(),
+      const [dist, act, cnt, flagged, kc] = await Promise.all([
+        getLevelDistribution(), // уже отфильтровано от орфанов удалённых карточек
         getActivity(90),
         countCards(),
         getAllFlagged(),
@@ -40,12 +40,7 @@ const StatsScreen: FC<Props> = ({ onClose }) => {
       setTotal(cnt);
       setFlaggedCards(flagged);
       setKnown(kc);
-      const d: Record<number, number> = {0:0,1:0,2:0,3:0,4:0};
-      for (const p of prog) {
-        const lvl = Math.min(p.level, 4);
-        d[lvl] = (d[lvl] ?? 0) + 1;
-      }
-      setDist(d);
+      setDist(dist);
       setActivity(act);
     };
     load();
