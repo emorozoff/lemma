@@ -45,8 +45,14 @@ export default function App() {
     const apply = () => {
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(() => {
+        // Сжимаем layout под клавиатуру ТОЛЬКО когда реально фокус в поле ввода.
+        // Иначе разница innerHeight−visualViewport на некоторых устройствах/OS
+        // (напр. новые iPhone) может ложно сработать в покое → .app укорачивается,
+        // внизу появляется пустая полоса, а нижняя навигация уезжает вверх.
+        const ae = document.activeElement as HTMLElement | null;
+        const typing = !!ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.isContentEditable);
         const kb = Math.max(0, window.innerHeight - vv.height - Math.max(0, vv.offsetTop));
-        if (kb > 120) {
+        if (typing && kb > 120) {
           root.style.setProperty('--app-h', `${Math.round(vv.height)}px`);
           root.style.setProperty('--kb-inset', `${Math.round(kb)}px`);
         } else {
@@ -58,12 +64,16 @@ export default function App() {
     apply();
     vv.addEventListener('resize', apply);
     vv.addEventListener('scroll', apply);
-    // iOS отдаёт устаревшую высоту сразу после закрытия клавиатуры — пере-синк.
+    // Пере-синк при фокусе/расфокусе поля (iOS отдаёт устаревшую высоту сразу
+    // после закрытия клавиатуры).
+    const onFocusIn = () => apply();
     const onFocusOut = () => setTimeout(apply, 350);
+    window.addEventListener('focusin', onFocusIn);
     window.addEventListener('focusout', onFocusOut);
     return () => {
       vv.removeEventListener('resize', apply);
       vv.removeEventListener('scroll', apply);
+      window.removeEventListener('focusin', onFocusIn);
       window.removeEventListener('focusout', onFocusOut);
       cancelAnimationFrame(raf);
     };

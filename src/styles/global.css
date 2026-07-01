@@ -36,6 +36,11 @@
      реальную видимую высоту (visualViewport) — см. App.tsx. */
   --app-h: 100dvh;
   --kb-inset: 0px;
+  /* Фон со скан-текстурой — переиспользуем на html и #root, чтобы даже при
+     любых расхождениях высоты не появлялась голая белая область снизу. */
+  --bg-scanlines:
+    repeating-linear-gradient(to bottom, transparent 0, transparent 2px, var(--scanline-color) 2px, var(--scanline-color) 3px),
+    var(--bg);
 }
 
 [data-theme="light"] {
@@ -64,10 +69,10 @@ html, body {
   overflow: hidden;
   overscroll-behavior: none;
   /* Фон со скан-текстурой на html — покрывает весь экран, включая
-     safe-area внизу (home indicator) в standalone-режиме на iPhone. */
-  background:
-    repeating-linear-gradient(to bottom, transparent 0, transparent 2px, var(--scanline-color) 2px, var(--scanline-color) 3px),
-    var(--bg);
+     safe-area внизу (home indicator) в standalone-режиме на iPhone.
+     Фон корневого элемента распространяется на всю область холста. */
+  background: var(--bg-scanlines);
+  background-color: var(--bg);
 }
 
 body {
@@ -83,6 +88,10 @@ body {
 #root {
   height: 100%;
   height: 100dvh;
+  /* Дублируем фон, чтобы область под укороченным .app (если такое случится)
+     не оставалась голой белой, а несла ту же скан-текстуру. */
+  background: var(--bg-scanlines);
+  background-color: var(--bg);
 }
 
 button {
