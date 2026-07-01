@@ -91,8 +91,9 @@ describe('levels', () => {
   it('0 known → Чистый лист', () => {
     expect(getCurrentLevel(0).title).toBe('Чистый лист');
   });
-  it('beyond the cap stays at the top level (7800)', () => {
-    expect(getCurrentLevel(9000).min).toBe(7800);
+  it('beyond the cap stays at the top level (5072 = весь словарь Lemma)', () => {
+    expect(getCurrentLevel(9000).min).toBe(5072);
+    expect(getCurrentLevel(5072).title).toBe('Весь словарь Lemma');
   });
   it('progress is 0% at a level boundary, grows toward next', () => {
     expect(getLevelProgress(0)).toBe(0);
